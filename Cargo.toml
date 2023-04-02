@@ -6,8 +6,12 @@ edition = "2021"
 [lib]
 crate-type = ["cdylib"]
 
+[profile.release]
+opt-level = 3
+
 [dependencies]
 num-traits = "0.2.15"
+quote = "1.0.26"
 roaring = "0.10.1"
-udf = "0.5.1"
-
+syn = "2.0.13"
+udf = "0.5.3"
