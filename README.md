@@ -1,8 +1,15 @@
-* 32 - for INT
-* 64 - for BIGINT
-* nullsafe - if result is NULL, then return an empty map BLOB
-* count - return number of elements in bitmap result, not a bitmap itself
+# Roaring bitmaps as MySQL/MariaDB User Defined Functions
 
+*Thes is work in progress!*
+
+## Prefixes and suffixes:
+
+* roaring32 - for INT
+* roaring64 - for BIGINT
+* nullsafe_ - return an empty bitmap BLOB or 0 or "[]" insted of NULL
+* _count    - return number of elements in bitmap result, not a bitmap itself
+
+## Checklist:
 
 * [ ]  4 roaring[32|64]_[nullsafe_?]create ([value0 INT[,value1 INT[, ...]]]) -> BLOB
 * [ ]  4 roaring[32|64]_[nullsafe_?]insert (map BLOB[, value0 INT[,value1 INT[, ...]]]) -> BLOB
