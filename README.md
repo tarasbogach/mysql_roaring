@@ -1,6 +1,6 @@
 # Roaring bitmaps as MySQL/MariaDB User Defined Functions
 
-*Thes is work in progress!*
+**This is work in progress!**
 
 ## Prefixes and suffixes:
 
