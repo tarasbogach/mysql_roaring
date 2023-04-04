@@ -11,9 +11,8 @@
 
 ## Checklist:
 
-* [ ]  4 roaring[32|64]_[nullsafe_?]create ([value0 INT[,value1 INT[, ...]]]) -> BLOB
-* [ ]  4 roaring[32|64]_[nullsafe_?]insert (map BLOB[, value0 INT[,value1 INT[, ...]]]) -> BLOB
-* [ ]  4 roaring[32|64]_[nullsafe_?]remove (map BLOB[, value0 INT[,value1 INT[, ...]]]) -> BLOB
+* [x]  4 roaring[32|64]_[nullsafe_?]create ([value0 INT[,value1 INT[, ...]]]) -> BLOB
+* [x]  8 roaring[32|64]_[nullsafe_?][remove|insert] (map BLOB[, value0 INT[,value1 INT[, ...]]]) -> BLOB
 * [x]  4 roaring[32|64]_[nullsafe_?]contains (map BLOB, value INT) -> BOOL
 * [x]  4 roaring[32|64]_[nullsafe_?]count (map BLOB) -> INT
 * [x]  4 roaring[32|64]_[nullsafe_?]json (map BLOB) -> LONGTEXT -- JSON Array of Number
