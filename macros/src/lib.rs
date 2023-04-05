@@ -218,7 +218,7 @@ pub fn maps_op(_input: TokenStream) -> TokenStream {
                     let maybe_null = if nullsafe { quote!() } else { quote! {cfg.set_maybe_null(true);} };
                     let on_null_arg = if nullsafe { quote!(()) } else { quote!(return Ok(None)) };
                     let on_null_agg = if nullsafe { quote!(<#map_type_name>::new()) } else { quote!(return Ok(None)) };
-                    let bytes_result = quote!(&self.vec[..]);
+                    let bytes_result = quote!(&self.vec[0..self.vec.len()]);
                     let bytes_result = if nullsafe { quote!(#bytes_result) } else { quote!(Some(#bytes_result)) };
                     let count_result = quote!(agg.len() as i64);
                     let count_result = if nullsafe { quote!(#count_result) } else { quote!(Some(#count_result)) };
@@ -481,3 +481,115 @@ pub fn map_json(_input: TokenStream) -> TokenStream {
     output.into()
 }
 
+
+#[proc_macro]
+pub fn ints_group_create(_input: TokenStream) -> TokenStream {
+    let mut output = quote!();
+    for bit_size in vec!["32", "64"] {
+        for nullsafe in vec![true, false] {
+            let struct_name = format_ident!("Roaring{}{}GroupCreate",  bit_size,  if nullsafe {"Nullsafe"} else {""});
+            let map_type_name = format_ident!("Map{}", bit_size);
+            let return_type = quote!(&'a [u8]);
+            let return_type = if nullsafe { quote!(#return_type) } else { quote!(Option<#return_type>) };
+            let maybe_null_cnf = if nullsafe { quote!(_cfg) } else { quote! {cfg} };
+            let maybe_null = if nullsafe { quote!() } else { quote! {cfg.set_maybe_null(true);} };
+            let bytes_result = quote!(&self.vec[0..self.vec.len()]);
+            let bytes_result = if nullsafe { quote!(#bytes_result) } else { quote!(Some(#bytes_result)) };
+            let extend_capacity = quote! {
+                let capacity = self.map.serialized_size();
+                if self.vec.capacity() < capacity {
+                    self.vec.reserve(capacity - self.vec.capacity());
+                }
+            };
+            let null_bytes_result = if nullsafe { quote!(&self.vec[0..self.vec.len()]) } else { quote!(None) };
+            let null_result = quote!{
+                #extend_capacity
+                if let Ok(_) = self.map.serialize_into(&mut self.vec) {
+                    Ok(#null_bytes_result)
+                } else {
+                    Err(ProcessError)
+                }
+            };
+            let result =  quote!{
+                #extend_capacity
+                if let Ok(_) = self.map.serialize_into(&mut self.vec) {
+                    Ok(#bytes_result)
+                } else {
+                    Err(ProcessError)
+                }
+            };
+
+            let mut operations = quote!();
+            for (func, op) in vec![("add", "insert"), ("remove", "remove")].iter() {
+                let func = format_ident!("{}", func);
+                let op = format_ident!("{}", op);
+                let operation = if bit_size == "64" {
+                    quote!{
+                        self.map.#op(value as u64);
+                        Ok(())
+                    }
+                } else {
+                    quote!{
+                        if let Some(value) = value.to_u32() {
+                            self.map.#op(value);
+                            Ok(())
+                        } else {
+                            Err(NonZeroU8::new(1u8).unwrap())
+                        }
+                    }
+                };
+                operations.extend(quote!{
+                    fn #func(&mut self, _cfg: &UdfCfg<Process>, args: &ArgList<Process>, _error: Option<NonZeroU8>) -> Result<(), NonZeroU8> {
+                        if let Some(value) = args.get(0).unwrap().value().as_int() {
+                            #operation
+                        } else {
+                            Ok(())
+                        }
+                    }
+                });
+            }
+            output.extend(quote!{
+                #[derive(Default)]
+                struct #struct_name {
+                    map: #map_type_name,
+                    vec: Vec<u8>,
+                }
+
+                #[register]
+                impl AggregateUdf for #struct_name {
+                    fn clear(&mut self, _cfg: &UdfCfg<Process>, _error: Option<NonZeroU8>) -> Result<(), NonZeroU8> {
+                        self.map.clear();
+                        self.vec.clear();
+                        Ok(())
+                    }
+                    #operations
+                }
+
+                #[register]
+                impl BasicUdf for #struct_name {
+                    type Returns<'a> = #return_type;
+
+                    fn init(#maybe_null_cnf: &UdfCfg<Init>, args: &ArgList<Init>) -> Result<Self, String> {
+                        #maybe_null
+                        if args.len() != 1 {
+                            return Err(format!("Expected one arguments; Got {} arguments.", args.len()));
+                        }
+                        if !args.get(0).unwrap().value().is_int() {
+                            return Err(format!("{} argument mast be INTEGER or NULL.", 0));
+                        }
+                        Ok(Self::default())
+                    }
+
+                    fn process<'a>(&'a mut self, _cfg: &UdfCfg<Process>, _args: &ArgList<Process>, _error: Option<NonZeroU8>) -> Result<Self::Returns<'a>, ProcessError> {
+                        if(self.map.len() > 0) {
+                            #result
+                        } else {
+                            #null_result
+                        }
+                    }
+                }
+            })
+        }
+    }
+    output.into()
+}
