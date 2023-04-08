@@ -6,4 +6,5 @@
 # already existing elements were commented out
 
 #/target
+/example
 /Cargo.lock

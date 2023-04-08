@@ -2,6 +2,7 @@
 name = "mysql_roaring"
 version = "0.1.0"
 edition = "2021"
+build = "./src/doc.rs"
 
 [lib]
 crate-type = ["cdylib"]
@@ -14,3 +15,4 @@ num-traits = "0.2.15"
 roaring = "0.10.1"
 udf = "0.5.3"
 macros = {path='./macros'}
+
