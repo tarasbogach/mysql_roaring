@@ -12,7 +12,7 @@ fn uc_first(s: &str) -> String {
 
 
 #[proc_macro]
-pub fn ints_create(_input: TokenStream) -> TokenStream {
+pub fn create(_input: TokenStream) -> TokenStream {
     let mut output = quote!();
     for bit_size in vec!["32", "64"] {
         for nullsafe in vec![true, false] {
@@ -22,16 +22,15 @@ pub fn ints_create(_input: TokenStream) -> TokenStream {
             let return_type = if nullsafe { quote!(#return_type) } else { quote!(Option<#return_type>) };
             let maybe_null_cnf = if nullsafe { quote!(_cfg) } else { quote! {cfg} };
             let maybe_null = if nullsafe { quote!() } else { quote! {cfg.set_maybe_null(true);} };
-            let operation = quote! {map.insert(value)};
             let operation = if bit_size == "64" {
                 quote! {
                     let value = value as u64;
-                    #operation;
+                    map.insert(value);
                 }
             } else {
                 quote! {
                     if let Some(value) = value.to_u32() {
-                        #operation;
+                        map.insert(value);
                     } else {
                         return Err(ProcessError);
                     }
@@ -99,7 +98,7 @@ pub fn ints_create(_input: TokenStream) -> TokenStream {
 }
 
 #[proc_macro]
-pub fn map_ints_op(_input: TokenStream) -> TokenStream {
+pub fn map_int_op(_input: TokenStream) -> TokenStream {
     let mut output = quote!();
     for bit_size in vec!["32", "64"] {
         for nullsafe in vec![true, false] {
@@ -202,7 +201,7 @@ pub fn map_ints_op(_input: TokenStream) -> TokenStream {
 }
 
 #[proc_macro]
-pub fn maps_op(_input: TokenStream) -> TokenStream {
+pub fn map_op(_input: TokenStream) -> TokenStream {
     let mut output = quote!();
     for bit_size in vec!["32", "64"] {
         for nullsafe in vec![true, false] {
@@ -298,7 +297,7 @@ pub fn maps_op(_input: TokenStream) -> TokenStream {
 }
 
 #[proc_macro]
-pub fn map_contains(_input: TokenStream) -> TokenStream {
+pub fn contains(_input: TokenStream) -> TokenStream {
     let mut output = quote!();
     for bit_size in vec!["32", "64"] {
         for nullsafe in vec![true, false] {
@@ -356,7 +355,7 @@ pub fn map_contains(_input: TokenStream) -> TokenStream {
 }
 
 #[proc_macro]
-pub fn map_count(_input: TokenStream) -> TokenStream {
+pub fn count(_input: TokenStream) -> TokenStream {
     let mut output = quote!();
     for bit_size in vec!["32", "64"] {
         for nullsafe in vec![true, false] {
@@ -408,7 +407,7 @@ pub fn map_count(_input: TokenStream) -> TokenStream {
 }
 
 #[proc_macro]
-pub fn map_json(_input: TokenStream) -> TokenStream {
+pub fn json(_input: TokenStream) -> TokenStream {
     let mut output = quote!();
     for bit_size in vec!["32", "64"] {
         for nullsafe in vec![true, false] {
@@ -483,7 +482,7 @@ pub fn map_json(_input: TokenStream) -> TokenStream {
 
 
 #[proc_macro]
-pub fn maps_group_op(_input: TokenStream) -> TokenStream {
+pub fn group_map_op(_input: TokenStream) -> TokenStream {
     let mut output = quote!();
     for bit_size in vec!["32", "64"] {
         for op in vec!["or", "xor", "and"] {
@@ -567,6 +566,7 @@ pub fn maps_group_op(_input: TokenStream) -> TokenStream {
                     #clear
                     #add
                 }
+
                 #[register]
                 impl BasicUdf for #struct_name {
                     type Returns<'a> = Option<&'a [u8]>;
@@ -589,6 +589,7 @@ pub fn maps_group_op(_input: TokenStream) -> TokenStream {
                         }
                     }
                 }
+
                 #[derive(Default)]
                 struct #struct_count_name {
                     #fields_count
@@ -599,6 +600,7 @@ pub fn maps_group_op(_input: TokenStream) -> TokenStream {
                     #clear_count
                     #add
                 }
+
                 #[register]
                 impl BasicUdf for #struct_count_name {
                     type Returns<'a> = Option<i64>;
@@ -624,6 +626,7 @@ pub fn maps_group_op(_input: TokenStream) -> TokenStream {
                     #clear
                     #add
                 }
+
                 #[register]
                 impl BasicUdf for #struct_nullsafe_name {
                     type Returns<'a> = &'a [u8];
@@ -650,6 +653,7 @@ pub fn maps_group_op(_input: TokenStream) -> TokenStream {
                         }
                     }
                 }
+
                 #[derive(Default)]
                 struct #struct_nullsafe_count_name {
                     #fields_count
@@ -660,6 +664,7 @@ pub fn maps_group_op(_input: TokenStream) -> TokenStream {
                     #clear_count
                     #add
                 }
+
                 #[register]
                 impl BasicUdf for #struct_nullsafe_count_name {
                     type Returns<'a> = i64;
@@ -681,7 +686,7 @@ pub fn maps_group_op(_input: TokenStream) -> TokenStream {
 }
 
 #[proc_macro]
-pub fn ints_group_create(_input: TokenStream) -> TokenStream {
+pub fn group_create(_input: TokenStream) -> TokenStream {
     let mut output = quote!();
     for bit_size in vec!["32", "64"] {
         for nullsafe in vec![true, false] {

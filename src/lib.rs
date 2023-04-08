@@ -3,16 +3,13 @@ use num_traits::cast::ToPrimitive;
 use udf::prelude::*;
 use std::ops::{BitAndAssign, BitOrAssign, BitXorAssign};
 
-use macros::{ints_create, maps_op, map_ints_op, map_contains, map_count, map_json, ints_group_create, maps_group_op};
+use macros::{create, map_op, map_int_op, contains, count, json, group_create, group_map_op};
 
-ints_create!();
-maps_op!();
-map_ints_op!();
-map_contains!();
-map_count!();
-map_json!();
-ints_group_create!();
-maps_group_op!();
-
-
-
+create!();
+map_op!();
+map_int_op!();
+contains!();
+count!();
+json!();
+group_create!();
+group_map_op!();
