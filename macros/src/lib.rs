@@ -490,7 +490,7 @@ pub fn group_map_op(_input: TokenStream) -> TokenStream {
             let struct_name = format_ident!("Roaring{}Group{}",  bit_size,  ucf_op);
             let struct_nullsafe_name = format_ident!("Roaring{}NullsafeGroup{}",  bit_size,  ucf_op);
             let struct_count_name = format_ident!("Roaring{}Group{}Count",  bit_size,  ucf_op);
-            let struct_nullsafe_count_name = format_ident!("RoaringNullsafe{}Group{}Count",  bit_size,  ucf_op);
+            let struct_nullsafe_count_name = format_ident!("Roaring{}NullsafeGroup{}Count",  bit_size,  ucf_op);
             let map_type_name = format_ident!("Map{}", bit_size);
             let op_fn_name = format_ident!("bit{}_assign", op);
             let add = quote! {
