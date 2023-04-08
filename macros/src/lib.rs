@@ -325,7 +325,7 @@ pub fn contains(_input: TokenStream) -> TokenStream {
                         if !args.get(0).unwrap().value().is_string() {
                             return Err(format!("First argument mast be CLOB (bitmap) or NULL."));
                         }
-                        if !args.get(1).unwrap().value().is_int() {} else {
+                        if !args.get(1).unwrap().value().is_int() {
                             return Err(format!("Second argument mast be INT or NULL."));
                         }
                         #maybe_null
