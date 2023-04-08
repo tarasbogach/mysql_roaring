@@ -18,4 +18,4 @@
 * [x]  4 roaring[32|64]_[nullsafe_?]json (map BLOB) -> LONGTEXT -- JSON Array of Number
 * [x] 24 roaring[32|64]_[nullsafe_?][and|or|xor][_count?] ([map0 BLOB[, map1 BLOB[, ...]]]) -> BLOB
 * [x]  4 roaring[32|64]_[nullsafe_?]group_create (value INT) -> BLOB
-* [ ] 24 roaring[32|64]_[nullsafe_?]group_[and|or|xor][_count?] (map BLOB) -> BLOB
+* [x] 24 roaring[32|64]_[nullsafe_?]group_[and|or|xor][_count?] (map BLOB) -> BLOB

@@ -483,6 +483,204 @@ pub fn map_json(_input: TokenStream) -> TokenStream {
 
 
 #[proc_macro]
+pub fn maps_group_op(_input: TokenStream) -> TokenStream {
+    let mut output = quote!();
+    for bit_size in vec!["32", "64"] {
+        for op in vec!["or", "xor", "and"] {
+            let ucf_op = uc_first(op);
+            let struct_name = format_ident!("Roaring{}Group{}",  bit_size,  ucf_op);
+            let struct_nullsafe_name = format_ident!("Roaring{}NullsafeGroup{}",  bit_size,  ucf_op);
+            let struct_count_name = format_ident!("Roaring{}Group{}Count",  bit_size,  ucf_op);
+            let struct_nullsafe_count_name = format_ident!("RoaringNullsafe{}Group{}Count",  bit_size,  ucf_op);
+            let map_type_name = format_ident!("Map{}", bit_size);
+            let op_fn_name = format_ident!("bit{}_assign", op);
+            let add = quote! {
+                fn add(&mut self, _cfg: &UdfCfg<Process>, args: &ArgList<Process>, _error: Option<NonZeroU8>) -> Result<(), NonZeroU8> {
+                    if let Some(bytes) = args.get(0).unwrap().value().as_bytes() {
+                        if let Ok(map) = <#map_type_name>::deserialize_from(bytes) {
+                            if let Some(ref mut acc) = self.map {
+                                acc.#op_fn_name(map);
+                                Ok(())
+                            } else {
+                                self.map = Some(map);
+                                Ok(())
+                            }
+                        } else {
+                            Err(NonZeroU8::new(1u8).unwrap())
+                        }
+                    } else {
+                        Ok(())
+                    }
+                }
+            };
+            let init = quote! {
+                fn init(_cfg: &UdfCfg<Init>, args: &ArgList<Init>) -> Result<Self, String> {
+                    if args.len() != 1 {
+                        return Err(format!("Expected one arguments; Got {} arguments.", args.len()));
+                    }
+                    if !args.get(0).unwrap().value().is_string() {
+                        return Err(format!("{} argument mast be BLOB or NULL.", 0));
+                    }
+                    Ok(Self::default())
+                }
+            };
+            let init_nullable = quote! {
+                fn init(cfg: &UdfCfg<Init>, args: &ArgList<Init>) -> Result<Self, String> {
+                    cfg.set_maybe_null(true);
+                    if args.len() != 1 {
+                        return Err(format!("Expected one arguments; Got {} arguments.", args.len()));
+                    }
+                    if !args.get(0).unwrap().value().is_string() {
+                        return Err(format!("{} argument mast be BLOB or NULL.", 0));
+                    }
+                    Ok(Self::default())
+                }
+            };
+            let clear = quote! {
+                fn clear(&mut self, _cfg: &UdfCfg<Process>, _error: Option<NonZeroU8>) -> Result<(), NonZeroU8> {
+                    self.map = None;
+                    self.vec.clear();
+                    Ok(())
+                }
+            };
+            let clear_count = quote! {
+                fn clear(&mut self, _cfg: &UdfCfg<Process>, _error: Option<NonZeroU8>) -> Result<(), NonZeroU8> {
+                    self.map = None;
+                    Ok(())
+                }
+            };
+            let fields = quote! {
+                map: Option<#map_type_name>,
+                vec: Vec<u8>,
+            };
+            let fields_count = quote! {
+                map: Option<#map_type_name>,
+            };
+            output.extend(quote! {
+                #[derive(Default)]
+                struct #struct_name {
+                    #fields
+                }
+
+                #[register]
+                impl AggregateUdf for #struct_name {
+                    #clear
+                    #add
+                }
+                #[register]
+                impl BasicUdf for #struct_name {
+                    type Returns<'a> = Option<&'a [u8]>;
+
+                    #init_nullable
+
+                    fn process<'a>(&'a mut self, _cfg: &UdfCfg<Process>, _args: &ArgList<Process>, _error: Option<NonZeroU8>) -> Result<Self::Returns<'a>, ProcessError> {
+                        if let Some(ref agg) = self.map {
+                            let capacity = agg.serialized_size();
+                            if self.vec.capacity() < capacity {
+                                self.vec.reserve(capacity - self.vec.capacity());
+                            }
+                            if let Ok(_) = agg.serialize_into(&mut self.vec) {
+                                Ok(Some(&self.vec[0..self.vec.len()]))
+                            } else {
+                                Err(ProcessError)
+                            }
+                        } else {
+                            Ok(None)
+                        }
+                    }
+                }
+                #[derive(Default)]
+                struct #struct_count_name {
+                    #fields_count
+                }
+
+                #[register]
+                impl AggregateUdf for #struct_count_name {
+                    #clear_count
+                    #add
+                }
+                #[register]
+                impl BasicUdf for #struct_count_name {
+                    type Returns<'a> = Option<i64>;
+
+                    #init_nullable
+
+                    fn process<'a>(&'a mut self, _cfg: &UdfCfg<Process>, _args: &ArgList<Process>, _error: Option<NonZeroU8>) -> Result<Self::Returns<'a>, ProcessError> {
+                        if let Some(ref agg) = self.map {
+                            Ok(Some(agg.len() as i64))
+                        } else {
+                            Ok(None)
+                        }
+                    }
+                }
+
+                #[derive(Default)]
+                struct #struct_nullsafe_name {
+                    #fields
+                }
+
+                #[register]
+                impl AggregateUdf for #struct_nullsafe_name {
+                    #clear
+                    #add
+                }
+                #[register]
+                impl BasicUdf for #struct_nullsafe_name {
+                    type Returns<'a> = &'a [u8];
+
+                    #init
+
+                    fn process<'a>(&'a mut self, _cfg: &UdfCfg<Process>, _args: &ArgList<Process>, _error: Option<NonZeroU8>) -> Result<Self::Returns<'a>, ProcessError> {
+                        let map;
+                        let null;
+                        if let Some(ref agg) = self.map {
+                            map = agg;
+                        } else {
+                            null = <#map_type_name>::new();
+                            map = &null;
+                        }
+                        let capacity = map.serialized_size();
+                        if self.vec.capacity() < capacity {
+                            self.vec.reserve(capacity - self.vec.capacity());
+                        }
+                        if let Ok(_) = map.serialize_into(&mut self.vec) {
+                            Ok(&self.vec[0..self.vec.len()])
+                        } else {
+                            Err(ProcessError)
+                        }
+                    }
+                }
+                #[derive(Default)]
+                struct #struct_nullsafe_count_name {
+                    #fields_count
+                }
+
+                #[register]
+                impl AggregateUdf for #struct_nullsafe_count_name {
+                    #clear_count
+                    #add
+                }
+                #[register]
+                impl BasicUdf for #struct_nullsafe_count_name {
+                    type Returns<'a> = i64;
+
+                    #init
+
+                    fn process<'a>(&'a mut self, _cfg: &UdfCfg<Process>, _args: &ArgList<Process>, _error: Option<NonZeroU8>) -> Result<Self::Returns<'a>, ProcessError> {
+                        if let Some(ref agg) = self.map {
+                            Ok(agg.len() as i64)
+                        } else {
+                            Ok(0i64)
+                        }
+                    }
+                }
+            })
+        }
+    }
+    output.into()
+}
+
+#[proc_macro]
 pub fn ints_group_create(_input: TokenStream) -> TokenStream {
     let mut output = quote!();
     for bit_size in vec!["32", "64"] {
@@ -502,7 +700,7 @@ pub fn ints_group_create(_input: TokenStream) -> TokenStream {
                 }
             };
             let null_bytes_result = if nullsafe { quote!(&self.vec[0..self.vec.len()]) } else { quote!(None) };
-            let null_result = quote!{
+            let null_result = quote! {
                 #extend_capacity
                 if let Ok(_) = self.map.serialize_into(&mut self.vec) {
                     Ok(#null_bytes_result)
@@ -510,7 +708,7 @@ pub fn ints_group_create(_input: TokenStream) -> TokenStream {
                     Err(ProcessError)
                 }
             };
-            let result =  quote!{
+            let result = quote! {
                 #extend_capacity
                 if let Ok(_) = self.map.serialize_into(&mut self.vec) {
                     Ok(#bytes_result)
@@ -524,12 +722,12 @@ pub fn ints_group_create(_input: TokenStream) -> TokenStream {
                 let func = format_ident!("{}", func);
                 let op = format_ident!("{}", op);
                 let operation = if bit_size == "64" {
-                    quote!{
+                    quote! {
                         self.map.#op(value as u64);
                         Ok(())
                     }
                 } else {
-                    quote!{
+                    quote! {
                         if let Some(value) = value.to_u32() {
                             self.map.#op(value);
                             Ok(())
@@ -538,7 +736,7 @@ pub fn ints_group_create(_input: TokenStream) -> TokenStream {
                         }
                     }
                 };
-                operations.extend(quote!{
+                operations.extend(quote! {
                     fn #func(&mut self, _cfg: &UdfCfg<Process>, args: &ArgList<Process>, _error: Option<NonZeroU8>) -> Result<(), NonZeroU8> {
                         if let Some(value) = args.get(0).unwrap().value().as_int() {
                             #operation
@@ -548,7 +746,7 @@ pub fn ints_group_create(_input: TokenStream) -> TokenStream {
                     }
                 });
             }
-            output.extend(quote!{
+            output.extend(quote! {
                 #[derive(Default)]
                 struct #struct_name {
                     map: #map_type_name,
