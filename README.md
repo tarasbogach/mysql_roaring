@@ -1,6 +1,6 @@
 # Roaring bitmaps as MySQL/MariaDB User Defined Functions
 
-| This development is completed, but only partially tested. Please use it at your own risk.
+> This development is completed, but only partially tested. Please use it at your own risk.
 
 ## Storage
 * You can use `LONGBLOB` data type to store bitmap in MySQL/MariaDB column.
@@ -102,7 +102,7 @@ SELECT roaring32_group_or_count(map) FROM example.bitmaps;
 
 ### 64bit integer
 
-| Please note that the 64-bit version may be significantly (6.5x in some my cases) slower than the 32-bit version.
+> Please note that the 64-bit version may be significantly (6.5x in some my cases) slower than the 32-bit version.
 
 ```mariadb
 CREATE DATABASE IF NOT EXISTS example;
