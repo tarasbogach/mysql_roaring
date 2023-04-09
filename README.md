@@ -84,7 +84,7 @@ COPY --from=build /output/libmysql_roaring.sql /docker-entrypoint-initdb.d/
 
 ### 32bit integer
 
-```mariadb
+```sql
 CREATE DATABASE IF NOT EXISTS example;
 
 CREATE TABLE IF NOT EXISTS example.bitmaps (id INT8 UNSIGNED PRIMARY KEY, map LONGBLOB);
@@ -104,7 +104,7 @@ SELECT roaring32_group_or_count(map) FROM example.bitmaps;
 
 > Please note that the 64-bit version may be significantly (6.5x in some my cases) slower than the 32-bit version.
 
-```mariadb
+```sql
 CREATE DATABASE IF NOT EXISTS example;
 
 CREATE TABLE IF NOT EXISTS example.bitmaps (id INT8 UNSIGNED PRIMARY KEY, map LONGBLOB);
