@@ -3,7 +3,7 @@ use num_traits::cast::ToPrimitive;
 use udf::prelude::*;
 use std::ops::{BitAndAssign, BitOrAssign, BitXorAssign};
 
-use macros::{create, map_op, map_int_op, contains, count, json, group_create, group_map_op};
+use mysql_roaring_macros::{create, map_op, map_int_op, contains, count, json, group_create, group_map_op};
 
 create!();
 map_op!();

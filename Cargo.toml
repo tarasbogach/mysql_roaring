@@ -14,5 +14,5 @@ opt-level = 3
 num-traits = "0.2.15"
 roaring = {version="0.10.1"} #, features=["simd"]
 udf = "0.5.3"
-macros = {path='./macros', version="0.1.0"}
+mysql_roaring_macros = {path='./macros', version="0.1.0"}
 
