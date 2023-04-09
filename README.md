@@ -120,7 +120,7 @@ SELECT roaring64_count(map) FROM example.bitmaps;
 SELECT roaring64_group_or_count(map) FROM example.bitmaps;
 ```
 
-### Founding
+### Funding
 
 In case you want to thank the author:
 
