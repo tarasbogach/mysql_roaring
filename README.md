@@ -119,3 +119,18 @@ SELECT roaring64_count(map) FROM example.bitmaps;
 
 SELECT roaring64_group_or_count(map) FROM example.bitmaps;
 ```
+
+### License
+This work is dual-licensed under Apache 2.0 and GPL 2.0 (or any later version) as of version 0.5.1. You can choose either of them if you use this work.
+
+SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
+
+### Funding
+
+In case you want to thank the author:
+
+* USDT TRC-20 TPWUrwAdktRziAFjb7ARqhs98S1kYa3ank
+* USDT ERC-20 0xdE1a4c9024b55F93D7FD34FbA488a172DF8e4cA3
+* BTC bc1qyjxf2enwygtsptel0qd9zkn50fh25r0m0qsm8s
+* ETH 0x95Bd0C1438A9f6300b40Fc5f1B61cEaBC89F0dA5
+* DOGE DGS1fLGKFekVWW1v2QDPvpT3i2EoxLqf7
