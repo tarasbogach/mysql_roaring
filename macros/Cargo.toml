@@ -2,6 +2,12 @@
 name = "mysql_roaring_macros"
 version = "0.1.0"
 edition = "2021"
+description="Roaring bitmaps as MySQL/MariaDB User Defined Functions"
+license-file="LICENSE"
+documentation="https://github.com/tarasbogach/mysql_roaring"
+homepage="https://github.com/tarasbogach/mysql_roaring"
+repository="https://github.com/tarasbogach/mysql_roaring.git"
+readme="README.md"
 
 [lib]
 proc-macro = true
