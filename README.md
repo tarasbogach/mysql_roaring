@@ -1,6 +1,6 @@
 # Roaring bitmaps as MySQL/MariaDB User Defined Functions
 
-| This work is complete, but not tested yet!
+| This development is completed, but only partially tested. Please use it at your own risk.
 
 ## Storage
 * You can use `LONGBLOB` data type to store bitmap in MySQL/MariaDB column.
@@ -78,4 +78,44 @@ FROM mariadb
 
 COPY --from=build /output/libmysql_roaring.so /usr/lib/mysql/plugin/
 COPY --from=build /output/libmysql_roaring.sql /docker-entrypoint-initdb.d/
+```
+
+## Examples
+
+### 32bit integer
+
+```mariadb
+CREATE DATABASE IF NOT EXISTS example;
+
+CREATE TABLE IF NOT EXISTS example.bitmaps (id INT8 UNSIGNED PRIMARY KEY, map LONGBLOB);
+
+TRUNCATE TABLE example.bitmaps;
+
+INSERT INTO  example.bitmaps
+SELECT seq % 10 as id, roaring32_group_create(CAST(RAND() * POW(2, 31) AS INTEGER)) as map
+FROM mysql.seq_1_to_1000000 GROUP BY seq % 10;
+
+SELECT roaring32_count(map) FROM example.bitmaps;
+
+SELECT roaring32_group_or_count(map) FROM example.bitmaps;
+```
+
+### 64bit integer
+
+| Please note that the 64-bit version may be significantly (6.5x in some my cases) slower than the 32-bit version.
+
+```mariadb
+CREATE DATABASE IF NOT EXISTS example;
+
+CREATE TABLE IF NOT EXISTS example.bitmaps (id INT8 UNSIGNED PRIMARY KEY, map LONGBLOB);
+
+TRUNCATE TABLE example.bitmaps;
+
+INSERT INTO  example.bitmaps
+SELECT seq % 10 as id, roaring64_group_create(CAST(RAND() * POW(2, 63) AS INTEGER)) as map
+FROM mysql.seq_1_to_1000000 GROUP BY seq % 10;
+
+SELECT roaring64_count(map) FROM example.bitmaps;
+
+SELECT roaring64_group_or_count(map) FROM example.bitmaps;
 ```
