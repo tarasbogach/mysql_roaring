@@ -121,7 +121,7 @@ SELECT roaring64_group_or_count(map) FROM example.bitmaps;
 ```
 
 ### License
-This work is dual-licensed under Apache 2.0 and GPL 2.0 (or any later version) as of version 0.5.1. You can choose either of them if you use this work.
+This work is dual-licensed under Apache 2.0 and GPL 2.0 (or any later version). You can choose either of them if you use this work.
 
 SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
 
